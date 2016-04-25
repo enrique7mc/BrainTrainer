@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private int totalQuestions = 0;
     private int correctAnwers = 0;
-    private boolean blocked = false;
+    private boolean blocked = true;
 
     RelativeLayout layout;
     Typeface typeface;
@@ -88,6 +88,10 @@ public class MainActivity extends AppCompatActivity {
         timerHandler.removeCallbacks(timerRunnable);
         newButton.setVisibility(View.VISIBLE);
         newButton.setText("New Game");
+        resultTextView.setText("Finished!");
+        blocked = true;
+        totalQuestions = 0;
+        correctAnwers = 0;
     }
 
     private void setTimerText(int seconds) {
@@ -109,7 +113,6 @@ public class MainActivity extends AppCompatActivity {
                 resultTextView.setText("Wrong!");
             }
 
-            scoreTextView.setText(String.format("%d/%d", correctAnwers, totalQuestions));
             new LongOperation().execute();
         }
     };
@@ -121,12 +124,15 @@ public class MainActivity extends AppCompatActivity {
             if (newButton.getText().equals("New Game")) {
                 startTime = System.currentTimeMillis();
                 timerHandler.postDelayed(timerRunnable, 0);
+                blocked = false;
+                scoreTextView.setText("0/0");
                 resultTextView.setText("");
                 resultTextView.setVisibility(View.VISIBLE);
                 newButton.setVisibility(View.INVISIBLE);
                 newButton.setText("");
             } else {
                 timerHandler.removeCallbacks(timerRunnable);
+                blocked = true;
                 resultTextView.setVisibility(View.INVISIBLE);
                 newButton.setVisibility(View.VISIBLE);
                 newButton.setText("New Game");
@@ -173,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Void v) {
             setAnswers(currentOperation);
             blocked = false;
+            scoreTextView.setText(String.format("%d/%d", correctAnwers, totalQuestions));
         }
 
         @Override
