@@ -1,24 +1,24 @@
 package com.enrique7mc.braintrainer;
 
-import android.content.Context;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridLayout;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    private int totalQuestions = 0;
+    private int correctAnwers = 0;
+    private boolean blocked = false;
+
     RelativeLayout layout;
     Typeface typeface;
     android.support.v7.widget.GridLayout grid;
@@ -26,12 +26,34 @@ public class MainActivity extends AppCompatActivity {
     TextView textView2;
     TextView textView3;
     TextView textView4;
+    TextView timeTextView;
     TextView operationTextView;
     TextView resultTextView;
+    TextView scoreTextView;
+    Button newButton;
     Operation currentOperation;
 
-    private static final Random random = new Random();
-    private final Operator[] operators = Operator.values();
+    long startTime = 0;
+    private static final int INIT_SECONDS = 20;
+    Handler timerHandler = new Handler();
+    Runnable timerRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+            long millis = System.currentTimeMillis() - startTime;
+            int seconds = (int) (millis / 1000);
+            seconds = INIT_SECONDS - seconds;
+
+            setTimerText(seconds);
+            if(seconds == 0) {
+                restart();
+                return;
+            }
+
+            timerHandler.postDelayed(this, 500);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,58 +71,73 @@ public class MainActivity extends AppCompatActivity {
         textView2.setOnClickListener(clickListener);
         textView3.setOnClickListener(clickListener);
         textView4.setOnClickListener(clickListener);
+        timeTextView = (TextView) findViewById(R.id.timeTextView);
         operationTextView = (TextView) findViewById(R.id.operationTextView);
         resultTextView = (TextView) findViewById(R.id.resultTextView);
+        scoreTextView = (TextView) findViewById(R.id.scoreTextView);
+        newButton = (Button) findViewById(R.id.newButton);
+        newButton.setOnClickListener(gameListener);
+        setTimerText(INIT_SECONDS);
+        resultTextView.setVisibility(View.INVISIBLE);
 
-        currentOperation = generateOperation();
+        currentOperation = Operation.generateOperation();
         setAnswers(currentOperation);
+    }
+
+    private void restart() {
+        timerHandler.removeCallbacks(timerRunnable);
+        newButton.setVisibility(View.VISIBLE);
+        newButton.setText("New Game");
+    }
+
+    private void setTimerText(int seconds) {
+        timeTextView.setText(String.format("%02ds", seconds));
     }
 
     View.OnClickListener clickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            int response = Integer.parseInt(((TextView)v).getText().toString());
-            Log.i(TAG, response + "");
-            if (response == currentOperation.getResult()) {
+            if (blocked) {
+                return;
+            }
+
+            int answer = Integer.parseInt(((TextView)v).getText().toString());
+            if (answer == currentOperation.getResult()) {
+                correctAnwers++;
                 resultTextView.setText("Correct!");
             } else {
                 resultTextView.setText("Wrong!");
             }
 
-            currentOperation = generateOperation();
-            setAnswers(currentOperation);
+            scoreTextView.setText(String.format("%d/%d", correctAnwers, totalQuestions));
+            new LongOperation().execute();
         }
     };
 
-    private Operation generateOperation() {
-        int left = random.nextInt(20);
-        int right = random.nextInt(20);
-        int operatorIndex = random.nextInt(3);
-        Operation op = new Operation(left, right, operators[operatorIndex]);
-        return op;
-    }
-
-    private Integer[] generateAnswers(Operation op) {
-        int result = op.getResult();
-        List<Integer> answers = new ArrayList<>();
-        answers.add(result);
-
-        while(answers.size() < 4) {
-            boolean isPositive = random.nextBoolean();
-            int offset = random.nextInt(Math.abs(result) + 1);
-            int answer = isPositive ? result + offset : result - offset;
-            if (!answers.contains(answer)) {
-                answers.add(answer);
+    View.OnClickListener gameListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Log.i(TAG, newButton.getText().toString());
+            if (newButton.getText().equals("New Game")) {
+                startTime = System.currentTimeMillis();
+                timerHandler.postDelayed(timerRunnable, 0);
+                resultTextView.setText("");
+                resultTextView.setVisibility(View.VISIBLE);
+                newButton.setVisibility(View.INVISIBLE);
+                newButton.setText("");
+            } else {
+                timerHandler.removeCallbacks(timerRunnable);
+                resultTextView.setVisibility(View.INVISIBLE);
+                newButton.setVisibility(View.VISIBLE);
+                newButton.setText("New Game");
             }
         }
-
-        Collections.shuffle(answers);
-        return answers.toArray(new Integer[answers.size()]);
-    }
+    };
 
     private void setAnswers(Operation op) {
+        totalQuestions++;
         operationTextView.setText(op.toString());
-        Integer[] answers = generateAnswers(op);
+        Integer[] answers = op.generateAnswers();
 
         textView1.setText(String.valueOf(answers[0]));
         textView2.setText(String.valueOf(answers[1]));
@@ -122,5 +159,28 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e("MainActivity", e.getMessage());
         }
+    }
+
+    private class LongOperation extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected Void doInBackground(String... params) {
+            currentOperation = Operation.generateOperation();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            setAnswers(currentOperation);
+            blocked = false;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            blocked = true;
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {}
     }
 }
