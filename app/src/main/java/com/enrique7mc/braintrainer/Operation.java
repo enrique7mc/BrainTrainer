@@ -1,5 +1,10 @@
 package com.enrique7mc.braintrainer;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
 /**
  * Created by enrique.munguia on 19/04/2016.
  */
@@ -7,6 +12,9 @@ public class Operation {
     final int left;
     final int right;
     Operator operator;
+
+    private static final Random random = new Random();
+    private static final Operator[] operators = Operator.values();
 
     public Operation(int left, int right, Operator operator) {
         this.left = left;
@@ -18,6 +26,32 @@ public class Operation {
         this.left = left;
         this.right = right;
         this.operator = Operator.SUM;
+    }
+
+    public static Operation generateOperation() {
+        int left = random.nextInt(20);
+        int right = random.nextInt(20);
+        int operatorIndex = random.nextInt(3);
+        Operation op = new Operation(left, right, operators[operatorIndex]);
+        return op;
+    }
+
+    public Integer[] generateAnswers() {
+        int result = this.getResult();
+        List<Integer> answers = new ArrayList<>();
+        answers.add(result);
+
+        while(answers.size() < 4) {
+            boolean isPositive = random.nextBoolean();
+            int offset = random.nextInt(Math.abs(result) + 4);
+            int answer = isPositive ? result + offset : result - offset;
+            if (!answers.contains(answer)) {
+                answers.add(answer);
+            }
+        }
+
+        Collections.shuffle(answers);
+        return answers.toArray(new Integer[answers.size()]);
     }
 
     public int getResult() {
