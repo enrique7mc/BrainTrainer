@@ -1,12 +1,16 @@
 package com.enrique7mc.braintrainer;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -123,13 +127,13 @@ public class MainActivity extends AppCompatActivity {
                 scoreTextView.setText("0/0");
                 resultTextView.setText("");
                 resultTextView.setVisibility(View.VISIBLE);
-                newButton.setVisibility(View.INVISIBLE);
+                hideView(newButton);
                 newButton.setText("");
             } else {
                 timerHandler.removeCallbacks(timerRunnable);
                 blocked = true;
                 resultTextView.setVisibility(View.INVISIBLE);
-                newButton.setVisibility(View.VISIBLE);
+                showView(newButton);
                 newButton.setText("New Game");
             }
         }
@@ -184,5 +188,44 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onProgressUpdate(Void... values) {}
+    }
+
+    private void showView(View view) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            int cx = view.getWidth() / 2;
+            int cy = view.getHeight() / 2;
+            float finalRadius = (float) Math.hypot(cx, cy);
+
+            Animator anim =
+                    ViewAnimationUtils.createCircularReveal(view, cx, cy, 0, finalRadius);
+
+            view.setVisibility(View.VISIBLE);
+            anim.start();
+        } else {
+            view.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void hideView(final View view) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            int cx = view.getWidth() / 2;
+            int cy = view.getHeight() / 2;
+            float initialRadius = (float) Math.hypot(cx, cy);
+
+            Animator anim =
+                    ViewAnimationUtils.createCircularReveal(view, cx, cy, initialRadius, 0);
+
+            anim.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    super.onAnimationEnd(animation);
+                    view.setVisibility(View.INVISIBLE);
+                }
+            });
+
+            anim.start();
+        } else {
+            view.setVisibility(View.INVISIBLE);
+        }
     }
 }
