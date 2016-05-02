@@ -15,8 +15,7 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private int totalQuestions = 0;
-    private int correctAnwers = 0;
+    private Game game = new Game();
     private boolean blocked = true;
 
     RelativeLayout layout;
@@ -31,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
     TextView resultTextView;
     TextView scoreTextView;
     Button newButton;
-    Operation currentOperation;
 
     long startTime = 0;
     private static final int INIT_SECONDS = 20;
@@ -80,8 +78,7 @@ public class MainActivity extends AppCompatActivity {
         setTimerText(INIT_SECONDS);
         resultTextView.setVisibility(View.INVISIBLE);
 
-        currentOperation = Operation.generateOperation();
-        setAnswers(currentOperation);
+        setAnswers(game.generateNextOperation());
     }
 
     private void restart() {
@@ -90,8 +87,8 @@ public class MainActivity extends AppCompatActivity {
         newButton.setText("New Game");
         resultTextView.setText("Finished!");
         blocked = true;
-        totalQuestions = 0;
-        correctAnwers = 0;
+        game = new Game();
+        setAnswers(game.generateNextOperation());
     }
 
     private void setTimerText(int seconds) {
@@ -106,8 +103,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             int answer = Integer.parseInt(((TextView)v).getText().toString());
-            if (answer == currentOperation.getResult()) {
-                correctAnwers++;
+            if (game.isCorrectAnswer(answer)) {
                 resultTextView.setText("Correct!");
             } else {
                 resultTextView.setText("Wrong!");
@@ -120,7 +116,6 @@ public class MainActivity extends AppCompatActivity {
     View.OnClickListener gameListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Log.i(TAG, newButton.getText().toString());
             if (newButton.getText().equals("New Game")) {
                 startTime = System.currentTimeMillis();
                 timerHandler.postDelayed(timerRunnable, 0);
@@ -141,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void setAnswers(Operation op) {
-        totalQuestions++;
         operationTextView.setText(op.toString());
         Integer[] answers = op.generateAnswers();
 
@@ -171,15 +165,16 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(String... params) {
-            currentOperation = Operation.generateOperation();
+            game.generateNextOperation();
             return null;
         }
 
         @Override
         protected void onPostExecute(Void v) {
-            setAnswers(currentOperation);
+            setAnswers(game.getCurrentOperation());
             blocked = false;
-            scoreTextView.setText(String.format("%d/%d", correctAnwers, totalQuestions));
+            scoreTextView.setText(String.format("%d/%d",
+                    game.getCorrectAnwers(), game.getTotalQuestions() - 1));
         }
 
         @Override

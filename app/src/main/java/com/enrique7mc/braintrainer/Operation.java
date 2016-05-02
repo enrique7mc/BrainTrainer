@@ -28,7 +28,7 @@ public class Operation {
         this.operator = Operator.SUM;
     }
 
-    public static Operation generateOperation() {
+    public static Operation generateRandomOperation() {
         int left = random.nextInt(20);
         int right = random.nextInt(20);
         int operatorIndex = random.nextInt(3);
