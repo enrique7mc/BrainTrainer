@@ -1,21 +1,20 @@
 package com.enrique7mc.braintrainer;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.enrique7mc.braintrainer.util.UIUtil;
 
 import codetail.graphics.drawables.DrawableHotspotTouch;
 import codetail.graphics.drawables.LollipopDrawable;
@@ -34,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     TextView textView2;
     TextView textView3;
     TextView textView4;
+    TextView[] textViews;
     TextView timeTextView;
     TextView operationTextView;
     TextView resultTextView;
@@ -74,26 +74,36 @@ public class MainActivity extends AppCompatActivity {
         textView2 = (TextView) findViewById(R.id.textView2);
         textView3 = (TextView) findViewById(R.id.textView3);
         textView4 = (TextView) findViewById(R.id.textView4);
-        textView1.setOnClickListener(clickListener);
-        textView2.setOnClickListener(clickListener);
-        textView3.setOnClickListener(clickListener);
-        textView4.setOnClickListener(clickListener);
+        textViews = new TextView[]{ textView1, textView2, textView3, textView4};
+        setupTextViews();
+
         timeTextView = (TextView) findViewById(R.id.timeTextView);
         operationTextView = (TextView) findViewById(R.id.operationTextView);
         resultTextView = (TextView) findViewById(R.id.resultTextView);
         scoreTextView = (TextView) findViewById(R.id.scoreTextView);
         newButton = (Button) findViewById(R.id.newButton);
         newButton.setOnClickListener(gameListener);
+
         setTimerText(INIT_SECONDS);
         resultTextView.setVisibility(View.INVISIBLE);
-
         setAnswers(game.generateNextOperation());
+    }
 
+    private void setupTextViews() {
+        for (int i = 0; i < textViews.length; i++) {
+            textViews[i].setOnClickListener(clickListener);
+        }
 
-        textView1.setBackgroundDrawable(getDrawable2(R.drawable.ripple));
-        textView1.setClickable(true);// if we don't set it true, ripple will not be played
-        textView1.setOnTouchListener(
-                new DrawableHotspotTouch((LollipopDrawable) textView1.getBackground()));
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            int[] ripples = new int[]{ R.drawable.ripple1, R.drawable.ripple2,
+                    R.drawable.ripple3, R.drawable.ripple4};
+            for (int i = 0; i < textViews.length; i++) {
+                textViews[i].setBackgroundDrawable(getDrawable2(ripples[i]));
+                textViews[i].setClickable(true);
+                textViews[i].setOnTouchListener(
+                        new DrawableHotspotTouch((LollipopDrawable) textViews[i].getBackground()));
+            }
+        }
     }
 
     public Drawable getDrawable2(int id){
@@ -142,13 +152,13 @@ public class MainActivity extends AppCompatActivity {
                 scoreTextView.setText("0/0");
                 resultTextView.setText("");
                 resultTextView.setVisibility(View.VISIBLE);
-                hideView(newButton);
+                UIUtil.hideView(newButton);
                 newButton.setText("");
             } else {
                 timerHandler.removeCallbacks(timerRunnable);
                 blocked = true;
                 resultTextView.setVisibility(View.INVISIBLE);
-                showView(newButton);
+                UIUtil.showView(newButton);
                 newButton.setText("New Game");
             }
         }
@@ -158,10 +168,9 @@ public class MainActivity extends AppCompatActivity {
         operationTextView.setText(op.toString());
         Integer[] answers = op.generateAnswers();
 
-        textView1.setText(String.valueOf(answers[0]));
-        textView2.setText(String.valueOf(answers[1]));
-        textView3.setText(String.valueOf(answers[2]));
-        textView4.setText(String.valueOf(answers[3]));
+        for (int i = 0; i < textViews.length; i++) {
+            textViews[i].setText(String.valueOf(answers[0]));
+        }
     }
 
     private void overrideFonts(final View v) {
@@ -203,44 +212,5 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onProgressUpdate(Void... values) {}
-    }
-
-    private void showView(View view) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            int cx = view.getWidth() / 2;
-            int cy = view.getHeight() / 2;
-            float finalRadius = (float) Math.hypot(cx, cy);
-
-            Animator anim =
-                    ViewAnimationUtils.createCircularReveal(view, cx, cy, 0, finalRadius);
-
-            view.setVisibility(View.VISIBLE);
-            anim.start();
-        } else {
-            view.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void hideView(final View view) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            int cx = view.getWidth() / 2;
-            int cy = view.getHeight() / 2;
-            float initialRadius = (float) Math.hypot(cx, cy);
-
-            Animator anim =
-                    ViewAnimationUtils.createCircularReveal(view, cx, cy, initialRadius, 0);
-
-            anim.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    super.onAnimationEnd(animation);
-                    view.setVisibility(View.INVISIBLE);
-                }
-            });
-
-            anim.start();
-        } else {
-            view.setVisibility(View.INVISIBLE);
-        }
     }
 }
