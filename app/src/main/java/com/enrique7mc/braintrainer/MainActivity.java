@@ -7,9 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -27,7 +25,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean blocked = true;
 
     RelativeLayout layout;
-    Typeface typeface;
     android.support.v7.widget.GridLayout grid;
     TextView textView1;
     TextView textView2;
@@ -67,8 +64,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         layout = (RelativeLayout) findViewById(R.id.container);
-        typeface = Typeface.createFromAsset(getAssets(), "fonts/Roboto.ttf");
-        overrideFonts(layout);
+        Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/Roboto.ttf");
+        UIUtil.overrideFonts(layout, typeface);
         grid = (android.support.v7.widget.GridLayout) findViewById(R.id.grid);
         textView1 = (TextView) findViewById(R.id.textView1);
         textView2 = (TextView) findViewById(R.id.textView2);
@@ -169,23 +166,7 @@ public class MainActivity extends AppCompatActivity {
         Integer[] answers = op.generateAnswers();
 
         for (int i = 0; i < textViews.length; i++) {
-            textViews[i].setText(String.valueOf(answers[0]));
-        }
-    }
-
-    private void overrideFonts(final View v) {
-        try {
-            if (v instanceof ViewGroup) {
-                ViewGroup vg = (ViewGroup) v;
-                for (int i = 0; i < vg.getChildCount(); i++) {
-                    View child = vg.getChildAt(i);
-                    overrideFonts(child);
-                }
-            } else if (v instanceof TextView ) {
-                ((TextView) v).setTypeface(typeface);
-            }
-        } catch (Exception e) {
-            Log.e("MainActivity", e.getMessage());
+            textViews[i].setText(String.valueOf(answers[i]));
         }
     }
 
