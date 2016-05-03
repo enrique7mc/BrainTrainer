@@ -3,6 +3,7 @@ package com.enrique7mc.braintrainer;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
@@ -15,6 +16,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import codetail.graphics.drawables.DrawableHotspotTouch;
+import codetail.graphics.drawables.LollipopDrawable;
+import codetail.graphics.drawables.LollipopDrawablesCompat;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -83,6 +88,16 @@ public class MainActivity extends AppCompatActivity {
         resultTextView.setVisibility(View.INVISIBLE);
 
         setAnswers(game.generateNextOperation());
+
+
+        textView1.setBackgroundDrawable(getDrawable2(R.drawable.ripple));
+        textView1.setClickable(true);// if we don't set it true, ripple will not be played
+        textView1.setOnTouchListener(
+                new DrawableHotspotTouch((LollipopDrawable) textView1.getBackground()));
+    }
+
+    public Drawable getDrawable2(int id){
+        return LollipopDrawablesCompat.getDrawable(getResources(), id, getTheme());
     }
 
     private void restart() {
